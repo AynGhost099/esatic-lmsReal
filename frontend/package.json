@@ -21,7 +21,8 @@
     "@hookform/resolvers": "^3.9.0",
     "lucide-react": "^0.447.0",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0"
+    "date-fns": "^4.1.0",
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@types/react": "^18.3.10",

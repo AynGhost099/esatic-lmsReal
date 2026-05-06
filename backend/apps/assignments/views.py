@@ -48,6 +48,18 @@ class SubmissionView(generics.CreateAPIView):
         return Response(SubmissionSerializer(submission).data, status=status.HTTP_201_CREATED)
 
 
+class MySubmissionView(generics.RetrieveAPIView):
+    serializer_class = SubmissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return generics.get_object_or_404(
+            Submission,
+            assignment_id=self.kwargs["assignment_id"],
+            student=self.request.user,
+        )
+
+
 class SubmissionListView(generics.ListAPIView):
     serializer_class = SubmissionSerializer
     permission_classes = [IsAdminOrTeacher]
