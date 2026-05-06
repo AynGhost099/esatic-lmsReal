@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.env
+.coverage
+coverage.xml
+htmlcov/
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# Django
+media/
+staticfiles/
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
