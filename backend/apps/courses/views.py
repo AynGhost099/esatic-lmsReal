@@ -27,11 +27,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             return Course.objects.all()
         if user.is_teacher:
             return Course.objects.filter(teacher=user)
-        return Course.objects.filter(
-            status=Course.Status.PUBLISHED,
-            enrollments__student=user,
-            enrollments__is_active=True,
-        )
+        return Course.objects.filter(status=Course.Status.PUBLISHED)
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:

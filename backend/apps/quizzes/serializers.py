@@ -24,6 +24,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class QuizSerializer(serializers.ModelSerializer):
     questions_count = serializers.SerializerMethodField()
+    questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quiz
@@ -31,7 +32,7 @@ class QuizSerializer(serializers.ModelSerializer):
             "id", "section", "title", "description", "time_limit_minutes",
             "max_attempts", "pass_score", "randomize_questions",
             "show_results_immediately", "start_date", "end_date",
-            "questions_count", "created_at",
+            "questions_count", "questions", "created_at",
         ]
 
     def get_questions_count(self, obj):

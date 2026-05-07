@@ -12,12 +12,9 @@ def category(db):
 @pytest.fixture
 def course(db, teacher_user, category):
     return Course.objects.create(
-        title="Mathématiques Discrètes",
-        slug="maths-discretes",
-        description="Cours de maths",
-        category=category,
-        teacher=teacher_user,
-        status=Course.Status.PUBLISHED,
+        title="Mathématiques Discrètes", slug="maths-discretes",
+        description="Cours de maths", category=category,
+        teacher=teacher_user, status=Course.Status.PUBLISHED,
     )
 
 
@@ -28,12 +25,8 @@ def section(db, course):
 
 @pytest.fixture
 def question_tf(db, teacher_user):
-    q = Question.objects.create(
-        text="Python est un langage de programmation.",
-        question_type=Question.Type.TRUE_FALSE,
-        points=1,
-        created_by=teacher_user,
-    )
+    q = Question.objects.create(text="Python est un langage de programmation.",
+        question_type=Question.Type.TRUE_FALSE, points=1, created_by=teacher_user)
     Choice.objects.create(question=q, text="Vrai", is_correct=True)
     Choice.objects.create(question=q, text="Faux", is_correct=False)
     return q
@@ -41,12 +34,8 @@ def question_tf(db, teacher_user):
 
 @pytest.fixture
 def question_mcq(db, teacher_user):
-    q = Question.objects.create(
-        text="Quels sont des langages compilés ?",
-        question_type=Question.Type.MCQ,
-        points=2,
-        created_by=teacher_user,
-    )
+    q = Question.objects.create(text="Quels sont des langages compilés ?",
+        question_type=Question.Type.MCQ, points=2, created_by=teacher_user)
     Choice.objects.create(question=q, text="C", is_correct=True)
     Choice.objects.create(question=q, text="C++", is_correct=True)
     Choice.objects.create(question=q, text="Python", is_correct=False)
@@ -56,13 +45,7 @@ def question_mcq(db, teacher_user):
 
 @pytest.fixture
 def quiz(db, section, question_tf, question_mcq):
-    q = Quiz.objects.create(
-        section=section,
-        title="Quiz Python Fondamental",
-        description="Testez vos bases en Python",
-        time_limit_minutes=30,
-        pass_score=60.0,
-    )
+    q = Quiz.objects.create(section=section, title="Quiz Python", time_limit_minutes=30, pass_score=60.0)
     QuizQuestion.objects.create(quiz=q, question=question_tf, order=1)
     QuizQuestion.objects.create(quiz=q, question=question_mcq, order=2)
     return q
@@ -71,14 +54,12 @@ def quiz(db, section, question_tf, question_mcq):
 @pytest.mark.django_db
 class TestQuizList:
     def test_list_quizzes(self, auth_client, quiz):
-        url = reverse("quizzes:quizzes-list")
-        response = auth_client.get(url)
+        response = auth_client.get(reverse("quiz-list"))
         assert response.status_code == 200
         assert response.data["count"] >= 1
 
-    def test_quiz_detail(self, auth_client, quiz):
-        url = reverse("quizzes:quizzes-detail", kwargs={"pk": quiz.id})
-        response = auth_client.get(url)
+    def test_quiz_detail_has_questions(self, auth_client, quiz):
+        response = auth_client.get(reverse("quiz-detail", kwargs={"pk": quiz.id}))
         assert response.status_code == 200
         assert response.data["title"] == quiz.title
         assert "questions" in response.data
@@ -88,15 +69,13 @@ class TestQuizList:
 @pytest.mark.django_db
 class TestQuizAttempt:
     def test_start_attempt(self, auth_client, student_user, quiz):
-        url = reverse("quizzes:quizzes-attempt", kwargs={"pk": quiz.id})
-        response = auth_client.post(url)
+        response = auth_client.post(reverse("quiz-attempt", kwargs={"quiz_id": quiz.id}))
         assert response.status_code in (200, 201)
         assert QuizAttempt.objects.filter(student=student_user, quiz=quiz).exists()
 
     def test_cannot_start_twice(self, auth_client, student_user, quiz):
         QuizAttempt.objects.create(student=student_user, quiz=quiz)
-        url = reverse("quizzes:quizzes-attempt", kwargs={"pk": quiz.id})
-        response = auth_client.post(url)
+        response = auth_client.post(reverse("quiz-attempt", kwargs={"quiz_id": quiz.id}))
         assert response.status_code == 400
 
 
@@ -106,15 +85,12 @@ class TestQuizSubmit:
         QuizAttempt.objects.create(student=student_user, quiz=quiz)
         correct_tf = question_tf.choices.get(is_correct=True)
         correct_mcq = list(question_mcq.choices.filter(is_correct=True).values_list("id", flat=True))
-
-        url = reverse("quizzes:quizzes-submit", kwargs={"pk": quiz.id})
-        payload = {
+        response = auth_client.put(reverse("quiz-submit", kwargs={"quiz_id": quiz.id}), {
             "answers": [
                 {"question_id": question_tf.id, "selected_choices": [correct_tf.id]},
                 {"question_id": question_mcq.id, "selected_choices": correct_mcq},
             ]
-        }
-        response = auth_client.put(url, payload, format="json")
+        }, format="json")
         assert response.status_code == 200
         assert "score" in response.data
         assert response.data["score"] == 100.0
@@ -123,15 +99,12 @@ class TestQuizSubmit:
         QuizAttempt.objects.create(student=student_user, quiz=quiz)
         wrong_tf = question_tf.choices.get(is_correct=False)
         wrong_mcq = list(question_mcq.choices.filter(is_correct=False).values_list("id", flat=True))
-
-        url = reverse("quizzes:quizzes-submit", kwargs={"pk": quiz.id})
-        payload = {
+        response = auth_client.put(reverse("quiz-submit", kwargs={"quiz_id": quiz.id}), {
             "answers": [
                 {"question_id": question_tf.id, "selected_choices": [wrong_tf.id]},
                 {"question_id": question_mcq.id, "selected_choices": wrong_mcq},
             ]
-        }
-        response = auth_client.put(url, payload, format="json")
+        }, format="json")
         assert response.status_code == 200
         assert response.data["score"] == 0.0
         assert response.data["passed"] is False

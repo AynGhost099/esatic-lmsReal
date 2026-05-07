@@ -11,7 +11,7 @@ class QuizListView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Quiz.objects.filter(section__course__enrollments__student=self.request.user)
+        return Quiz.objects.filter(section__course__status="published")
 
     def get_permissions(self):
         if self.request.method == "POST":
@@ -31,11 +31,9 @@ class StartAttemptView(generics.CreateAPIView):
 
     def create(self, request, quiz_id):
         quiz = generics.get_object_or_404(Quiz, pk=quiz_id)
-        existing = QuizAttempt.objects.filter(
-            student=request.user, quiz=quiz, status=QuizAttempt.Status.IN_PROGRESS
-        ).first()
-        if existing:
-            return Response(QuizAttemptSerializer(existing).data)
+        attempts = QuizAttempt.objects.filter(student=request.user, quiz=quiz)
+        if attempts.count() >= quiz.max_attempts:
+            return Response({"detail": "Nombre maximum de tentatives atteint."}, status=status.HTTP_400_BAD_REQUEST)
         attempt = QuizAttempt.objects.create(student=request.user, quiz=quiz)
         return Response(QuizAttemptSerializer(attempt).data, status=status.HTTP_201_CREATED)
 
