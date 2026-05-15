@@ -1,6 +1,29 @@
 from .base import *
 from decouple import config
 import dj_database_url
+import os
+
+
+# Templates
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'static')],  # ← AJOUTÉ
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                # ... tes context processors ...
+            ],
+        },
+    },
+]
+
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # ← AJOUTÉ
+]
 
 DEBUG = False
 
