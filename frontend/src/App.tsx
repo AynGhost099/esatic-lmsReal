@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import LoginPage from "@/pages/auth/LoginPage";
+import RegisterPage from "@/pages/auth/RegisterPage"; // ← AJOUTÉ
 import DashboardPage from "@/pages/dashboard/DashboardPage";
 import CoursesPage from "@/pages/courses/CoursesPage";
 import CourseDetailPage from "@/pages/courses/CourseDetailPage";
@@ -33,7 +34,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} /> {/* ← AJOUTÉ */}
+        
+        {/* Routes protégées */}
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
@@ -89,8 +94,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-import Register from './pages/Register';
-
-// Dans les Routes :
-<<Route path="/register" element={<Register />} />
