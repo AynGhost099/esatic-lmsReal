@@ -14,29 +14,46 @@ export default function RegisterPage() {
     setError('');
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          first_name: firstName,
-          last_name: lastName,
-        }),
-      });
+      const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  
+  try {
+    const payload = {
+      email,
+      password,
+      first_name: firstName,
+      last_name: lastName,
+    };
+    
+    console.log("Envoi:", payload); // ← DEBUG
+    
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-      if (response.ok) {
-        alert('Compte créé avec succès ! Vous pouvez vous connecter.');
-        navigate('/login');
-      } else {
-        const data = await response.json();
-        setError(data.detail || 'Erreur lors de l\'inscription');
-      }
-    } catch (err) {
-      setError('Erreur de connexion au serveur');
+    console.log("Status:", response.status); // ← DEBUG
+    
+    const data = await response.json();
+    console.log("Réponse:", data); // ← DEBUG
+
+    if (response.ok) {
+      alert('Compte créé avec succès !');
+      navigate('/login');
+    } else {
+      // Affiche le vrai message d'erreur de l'API
+      const errorMsg = Object.entries(data)
+        .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+        .join('\n');
+      setError(errorMsg || 'Erreur lors de l\'inscription');
     }
-  };
-
+  } catch (err) {
+    console.error("Erreur fetch:", err); // ← DEBUG
+    setError('Erreur de connexion au serveur');
+  }
+};
   return (
     <div className="min-h-screen bg-blue-800 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
