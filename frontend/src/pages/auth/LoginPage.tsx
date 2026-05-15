@@ -6,12 +6,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     try {
       const payload = { email, password };
@@ -20,31 +22,55 @@ export default function LoginPage() {
       const apiUrl = import.meta.env.VITE_API_URL;
       console.log("API URL:", apiUrl);
       
+      // Timeout de 60s pour le cold start Render
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      
       const response = await fetch(`${apiUrl}/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       console.log("Login status:", response.status);
       
       const data = await response.json();
       console.log("Login réponse:", data);
 
-      if (response.ok) {
-        // Stocker le token et les infos utilisateur
-        setAuth(data.access || data.token, data.user || { email });
+      if (!response.ok) {
+        // Affiche le vrai message d'erreur de l'API
+        const errorMsg = data.detail 
+          || Object.entries(data)
+              .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+              .join('\n')
+          || 'Email ou mot de passe incorrect';
+        setError(errorMsg);
+        return;
+      }
+
+      // Stocker le token et les infos utilisateur
+      if (data.access) {
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh || '');
+        
+        setAuth(data.access, data.user || { email });
         navigate('/dashboard');
       } else {
-        // Affiche le vrai message d'erreur de l'API
-        const errorMsg = Object.entries(data)
-          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
-          .join('\n');
-        setError(errorMsg || 'Email ou mot de passe incorrect');
+        setError('Réponse invalide du serveur');
       }
-    } catch (err) {
+      
+    } catch (err: any) {
       console.error("Erreur fetch login:", err);
-      setError('Erreur de connexion au serveur');
+      
+      if (err.name === 'AbortError') {
+        setError('Le serveur met trop de temps à répondre. Réessaie dans 30 secondes.');
+      } else {
+        setError('Erreur de connexion au serveur. Le backend est peut-être en train de se réveiller (cold start).');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,6 +95,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              disabled={isLoading}
             />
           </div>
           
@@ -80,14 +107,16 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              disabled={isLoading}
             />
           </div>
           
           <button
             type="submit"
-            className="w-full bg-blue-900 text-white p-2 rounded hover:bg-blue-800 transition-colors"
+            className="w-full bg-blue-900 text-white p-2 rounded hover:bg-blue-800 transition-colors disabled:bg-gray-400"
+            disabled={isLoading}
           >
-            Se connecter
+            {isLoading ? 'Connexion en cours...' : 'Se connecter'}
           </button>
         </form>
         
