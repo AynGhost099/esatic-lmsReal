@@ -4,6 +4,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from django.views.generic import TemplateView
+from django.urls import re_path
+
+urlpatterns = [
+    # ... tes routes API existantes ...
+    
+    # Servir le frontend pour toutes les autres URLs
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
+]
 
 API_PREFIX = "api/v1/"
 
