@@ -34,3 +34,5 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+ALLOWED_HOSTS = ["esatic-lmsreal.onrender.com", "localhost", "127.0.0.1"]
