@@ -5,6 +5,25 @@ from .models import User, Cohort
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = 'email'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'] = serializers.EmailField()
+        self.fields.pop('username', None)
+    
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        if email and password:
+            user = User.objects.filter(email=email).first()
+            if user and user.check_password(password):
+                attrs['username'] = user.username or user.email
+                return super().validate(attrs)
+        
+        raise serializers.ValidationError({'detail': 'Email ou mot de passe incorrect.'})
+    
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
