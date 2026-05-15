@@ -1,93 +1,103 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useNavigate } from "react-router-dom";
-import api from "@/services/api";
-import { useAuthStore } from "@/store/authStore";
-
-const schema = z.object({
-  email: z.string().email("Email invalide"),
-  password: z.string().min(1, "Mot de passe requis"),
-});
-
-type FormData = z.infer<typeof schema>;
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { setTokens, setUser } = useAuthStore();
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const { setAuth } = useAuthStore();
 
-  const onSubmit = async (data: FormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
     try {
-      const { data: tokens } = await api.post("/auth/login/", data);
-      setTokens(tokens.access, tokens.refresh);
-      const { data: user } = await api.get("/auth/profile/");
-      setUser(user);
-      navigate("/dashboard");
-    } catch {
-      setError("root", { message: "Email ou mot de passe incorrect" });
+      const payload = { email, password };
+      console.log("Login envoi:", payload);
+      
+      const apiUrl = import.meta.env.VITE_API_URL;
+      console.log("API URL:", apiUrl);
+      
+      const response = await fetch(`${apiUrl}/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      console.log("Login status:", response.status);
+      
+      const data = await response.json();
+      console.log("Login réponse:", data);
+
+      if (response.ok) {
+        // Stocker le token et les infos utilisateur
+        setAuth(data.access || data.token, data.user || { email });
+        navigate('/dashboard');
+      } else {
+        // Affiche le vrai message d'erreur de l'API
+        const errorMsg = Object.entries(data)
+          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+          .join('\n');
+        setError(errorMsg || 'Email ou mot de passe incorrect');
+      }
+    } catch (err) {
+      console.error("Erreur fetch login:", err);
+      setError('Erreur de connexion au serveur');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-esatic-blue to-blue-800">
-      <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-esatic-blue">ESATIC LMS</h1>
-          <p className="text-gray-500 mt-2">Plateforme d'apprentissage numérique</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <div className="min-h-screen bg-blue-800 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+        <h2 className="text-2xl font-bold text-center text-blue-900 mb-2">ESATIC LMS</h2>
+        <p className="text-center text-gray-500 mb-6">Plateforme d'apprentissage numérique</p>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm whitespace-pre-line">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
-              {...register("email")}
               type="email"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="votre@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
           </div>
-
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
             <input
-              {...register("password")}
               type="password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
           </div>
-
-          {errors.root && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {errors.root.message}
-            </div>
-          )}
-
+          
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-esatic-blue text-white py-3 rounded-lg font-semibold hover:bg-blue-900 transition disabled:opacity-60"
+            className="w-full bg-blue-900 text-white p-2 rounded hover:bg-blue-800 transition-colors"
           >
-            {isSubmitting ? "Connexion..." : "Se connecter"}
+            Se connecter
           </button>
         </form>
+        
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Pas encore de compte ?{' '}
+          <Link to="/register" className="text-blue-600 hover:underline font-medium">
+            S'inscrire
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
-
-// Dans Login.tsx, avant la fermeture du form ou du div principal :
-<p className="mt-4 text-center text-sm text-gray-600">
-  Pas encore de compte ?{' '}
-  <a href="/register" className="text-blue-600 hover:underline font-medium">
-    S'inscrire
-  </a>
-</p>
