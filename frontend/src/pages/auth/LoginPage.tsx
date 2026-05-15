@@ -16,19 +16,37 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const payload = { email, password };
-      console.log("Login envoi:", payload);
-      
       const apiUrl = import.meta.env.VITE_API_URL;
       console.log("API URL:", apiUrl);
       
-      // Timeout de 60s pour le cold start Render
+      // Étape 1 : Réveiller le backend (ping GET pour cold start)
+      setError('Réveil du serveur en cours... (30s max)');
+      try {
+        await fetch(`${apiUrl}/auth/login/`, { 
+          method: 'GET',
+          signal: AbortSignal.timeout(30000) 
+        });
+      } catch (pingErr) {
+        console.log("Ping done (expected 405):", pingErr);
+      }
+      
+      // Attendre 3 secondes que le backend soit prêt
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Étape 2 : Vraie connexion
+      setError('Connexion en cours...');
+      const payload = { email, password };
+      console.log("Login envoi:", payload);
+      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
       
       const response = await fetch(`${apiUrl}/auth/login/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
@@ -40,7 +58,6 @@ export default function LoginPage() {
       console.log("Login réponse:", data);
 
       if (!response.ok) {
-        // Affiche le vrai message d'erreur de l'API
         const errorMsg = data.detail 
           || Object.entries(data)
               .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
