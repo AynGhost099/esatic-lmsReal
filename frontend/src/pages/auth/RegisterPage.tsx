@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState(''); // ← AJOUTÉ
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
@@ -13,10 +14,17 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
     
+    // Vérification côté client
+    if (password !== passwordConfirm) {
+      setError('Les mots de passe ne correspondent pas');
+      return;
+    }
+    
     try {
       const payload = {
         email,
         password,
+        password_confirm: passwordConfirm, // ← AJOUTÉ
         first_name: firstName,
         last_name: lastName,
       };
@@ -24,7 +32,6 @@ export default function RegisterPage() {
       console.log("Envoi:", payload);
       
       const apiUrl = import.meta.env.VITE_API_URL;
-      console.log("API URL:", apiUrl);
       
       const response = await fetch(`${apiUrl}/auth/register/`, {
         method: 'POST',
@@ -104,6 +111,19 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              minLength={8}
+            />
+          </div>
+          
+          {/* ← CHAMP AJOUTÉ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
+            <input
+              type="password"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               minLength={8}
