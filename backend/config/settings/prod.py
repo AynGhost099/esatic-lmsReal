@@ -1,5 +1,6 @@
 from .base import *
 from decouple import config
+import dj_database_url
 
 DEBUG = False
 
@@ -26,3 +27,10 @@ STORAGES = {
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 CORS_ALLOWED_ORIGINS = []
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600
+    )
+}
