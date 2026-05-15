@@ -83,3 +83,11 @@ export default function LoginPage() {
     </div>
   );
 }
+
+// Dans Login.tsx, avant la fermeture du form ou du div principal :
+<p className="mt-4 text-center text-sm text-gray-600">
+  Pas encore de compte ?{' '}
+  <a href="/register" className="text-blue-600 hover:underline font-medium">
+    S'inscrire
+  </a>
+</p>
