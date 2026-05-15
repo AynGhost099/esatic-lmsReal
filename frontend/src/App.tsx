@@ -89,3 +89,8 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+import Register from './pages/Register';
+
+// Dans les Routes :
+<<Route path="/register" element={<Register />} />
