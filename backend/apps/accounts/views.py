@@ -24,6 +24,12 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = UserRegisterSerializer
     permission_classes = [permissions.AllowAny]
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        user.is_active = True  # ← AJOUTÉ
+        user.save()
+        return user
+
 
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
