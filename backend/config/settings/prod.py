@@ -26,11 +26,6 @@ AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = "private"
 
 
-
-# Supprime ça :
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Garde ça (modifié) :
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -39,6 +34,7 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
 # TEMPLATES - Configuration complète pour le frontend et l'admin
 TEMPLATES = [
     {
