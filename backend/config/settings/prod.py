@@ -67,3 +67,5 @@ DATABASES = {
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+ALLOWED_HOSTS = ["esatic-lmsreal.onrender.com", "localhost", "127.0.0.1"]
