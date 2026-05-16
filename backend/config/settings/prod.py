@@ -25,11 +25,20 @@ AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="eu-west-1")
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = "private"
 
-STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
-}
 
+
+# Supprime ça :
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Garde ça (modifié) :
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 # TEMPLATES - Configuration complète pour le frontend et l'admin
 TEMPLATES = [
     {
@@ -82,5 +91,3 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
