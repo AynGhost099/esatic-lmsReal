@@ -1,7 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.conf import settings
-from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
@@ -26,20 +24,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     # Catch-all pour le frontend React (DOIT ÊTRE EN DERNIER)
-    # Exclut api/, admin/, static/, et media/
-    re_path(r'^(?!api/|admin/|static/|media/).*$', TemplateView.as_view(template_name='index.html')),
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ]
-
-# Servir les fichiers statiques et médias en production
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    try:
-        import debug_toolbar
-        urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
-    except ImportError:
-        pass
-else:
-    # En production, servir aussi les fichiers statiques
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
